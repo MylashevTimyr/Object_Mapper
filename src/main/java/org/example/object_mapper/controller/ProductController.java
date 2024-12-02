@@ -2,7 +2,7 @@ package org.example.object_mapper.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.object_mapper.DTO.ProductDTO;
-import org.example.object_mapper.mapper.ProductMapper;
+import org.example.object_mapper.mapper.Mapper;
 import org.example.object_mapper.model.Product;
 import org.example.object_mapper.service.ProductService;
 import org.springframework.http.HttpStatus;
@@ -17,34 +17,38 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final Mapper mapper;
 
     @GetMapping
     public ResponseEntity<List<ProductDTO>> getAllProducts() {
         List<Product> products = productService.getAllProducts();
         List<ProductDTO> productDTOs = products.stream()
-                .map(ProductMapper::toDTO)
+                .map(product -> mapper.map(product, ProductDTO.class))
                 .toList();
         return ResponseEntity.ok(productDTOs);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
+    public ResponseEntity<String> getProductById(@PathVariable Long id) {
         Product product = productService.getProductById(id);
-        return ResponseEntity.ok(ProductMapper.toDTO(product));
+        ProductDTO productDTO = mapper.map(product, ProductDTO.class);
+        return ResponseEntity.ok(mapper.writeAsString(productDTO));
     }
 
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
-        Product product = ProductMapper.toEntity(productDTO);
+        Product product = mapper.map(productDTO, Product.class);
         Product createdProduct = productService.createProduct(product);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ProductMapper.toDTO(createdProduct));
+        ProductDTO createdDTO = mapper.map(createdProduct, ProductDTO.class);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdDTO);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
-        Product productDetails = ProductMapper.toEntity(productDTO);
+        Product productDetails = mapper.map(productDTO, Product.class);
         Product updatedProduct = productService.updateProduct(id, productDetails);
-        return ResponseEntity.ok(ProductMapper.toDTO(updatedProduct));
+        ProductDTO updatedDTO = mapper.map(updatedProduct, ProductDTO.class);
+        return ResponseEntity.ok(updatedDTO);
     }
 
     @DeleteMapping("/{id}")
@@ -53,3 +57,4 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 }
+
