@@ -1,11 +1,12 @@
 package org.example.object_mapper.service.impl;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.example.object_mapper.exception.CustomerNotFoundException;
 import org.example.object_mapper.model.Customer;
 import org.example.object_mapper.repository.CustomerRepository;
 import org.example.object_mapper.service.CustomerService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,8 +23,12 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer getCustomerById(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Customer ID must not be null");
+        }
+        System.out.println("Looking for Customer with ID: " + id);
         return customerRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Customer not found with id: " + id));
+                .orElseThrow(() -> new CustomerNotFoundException(id));
     }
 
     @Override
@@ -31,6 +36,7 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.save(customer);
     }
 
+    @Transactional
     @Override
     public Customer updateCustomer(Long id, Customer customerDetails) {
         Customer customer = getCustomerById(id);
@@ -41,10 +47,12 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.save(customer);
     }
 
+    @Transactional
     @Override
-    public void deleteCustomer(Long id) {
+    public boolean deleteCustomer(Long id) {
         Customer customer = getCustomerById(id);
         customerRepository.delete(customer);
+        return true;
     }
 }
 

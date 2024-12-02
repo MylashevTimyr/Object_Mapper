@@ -1,9 +1,11 @@
 package org.example.object_mapper.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.example.object_mapper.DTO.CustomerDTO;
+import org.example.object_mapper.mapper.CustomerMapper;
 import org.example.object_mapper.model.Customer;
 import org.example.object_mapper.service.CustomerService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,33 +14,38 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/customers")
+@RequiredArgsConstructor
 public class CustomerController {
 
     private final CustomerService customerService;
 
-    @Autowired
-    public CustomerController(CustomerService customerService) {
-        this.customerService = customerService;
-    }
-
     @GetMapping
-    public List<Customer> getAllCustomers() {
-        return customerService.getAllCustomers();
+    public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
+        List<Customer> customers = customerService.getAllCustomers();
+        List<CustomerDTO> customerDTOs = customers.stream()
+                .map(CustomerMapper::toDTO)
+                .toList();
+        return ResponseEntity.ok(customerDTOs);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
-        return ResponseEntity.ok(customerService.getCustomerById(id));
+    public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable Long id) {
+        Customer customer = customerService.getCustomerById(id);
+        return ResponseEntity.ok(CustomerMapper.toDTO(customer));
     }
 
     @PostMapping
-    public ResponseEntity<Customer> createCustomer(@Valid @RequestBody Customer customer) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(customerService.createCustomer(customer));
+    public ResponseEntity<CustomerDTO> createCustomer(@Valid @RequestBody CustomerDTO customerDTO) {
+        Customer customer = CustomerMapper.toEntity(customerDTO);
+        Customer createdCustomer = customerService.createCustomer(customer);
+        return ResponseEntity.status(HttpStatus.CREATED).body(CustomerMapper.toDTO(createdCustomer));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @Valid @RequestBody Customer customerDetails) {
-        return ResponseEntity.ok(customerService.updateCustomer(id, customerDetails));
+    public ResponseEntity<CustomerDTO> updateCustomer(@PathVariable Long id, @RequestBody CustomerDTO customerDTO) {
+        Customer customerDetails = CustomerMapper.toEntity(customerDTO);
+        Customer updatedCustomer = customerService.updateCustomer(id, customerDetails);
+        return ResponseEntity.ok(CustomerMapper.toDTO(updatedCustomer));
     }
 
     @DeleteMapping("/{id}")
@@ -47,4 +54,3 @@ public class CustomerController {
         return ResponseEntity.noContent().build();
     }
 }
-

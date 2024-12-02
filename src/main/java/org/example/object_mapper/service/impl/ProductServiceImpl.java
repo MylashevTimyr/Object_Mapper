@@ -6,6 +6,7 @@ import org.example.object_mapper.model.Product;
 import org.example.object_mapper.repository.ProductRepository;
 import org.example.object_mapper.service.ProductService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -31,6 +32,7 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(product);
     }
 
+    @Transactional
     @Override
     public Product updateProduct(Long id, Product productDetails) {
         Product product = getProductById(id);
@@ -41,10 +43,12 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(product);
     }
 
+    @Transactional
     @Override
-    public void deleteProduct(Long id) {
+    public boolean deleteProduct(Long id) {
         Product product = getProductById(id);
         productRepository.delete(product);
+        return true;
     }
 }
 
